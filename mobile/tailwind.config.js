@@ -37,10 +37,18 @@ module.exports = {
         destructive: {
           DEFAULT: 'rgb(var(--destructive) / <alpha-value>)',
         },
+        widget: {
+          DEFAULT: 'rgb(var(--widget) / <alpha-value>)',
+          accent: 'rgb(var(--widget-accent) / <alpha-value>)',
+        },
         border: 'rgb(var(--border)/<alpha-value>)',
         input: 'rgb(var(--input)/<alpha-value>)',
         ring: 'rgb(var(--ring) / <alpha-value>)',
-        white: 'rgb(255 255 255)',
+        white: 'rgb(255 255 255 / <alpha-value>)',
+        black: 'rgb(0 0 0 / <alpha-value>)',
+        gray: 'rgba(var(--gray))',
+        yellow: 'rgb(var(--yellow) / <alpha-value>)',
+
         // Chart colors
         chart: {
           1: 'rgb(var(--chart-1) / <alpha-value>)',
@@ -119,6 +127,7 @@ module.exports = {
         '2xs': '10px',
       },
       boxShadow: {
+        'DEFAULT': '-3px -3px 2px 0 rgba(205, 205, 205, 0.25), 4px 4px 24px 2 rgba(0, 0, 0, 0.25)',
         'hard-1': '-2px 2px 8px 0px rgba(38, 38, 38, 0.20)',
         'hard-2': '0px 3px 10px 0px rgba(38, 38, 38, 0.20)',
         'hard-3': '2px 2px 8px 0px rgba(38, 38, 38, 0.20)',
@@ -129,7 +138,9 @@ module.exports = {
         'soft-3': '0px 0px 30px rgba(38, 38, 38, 0.1)',
         'soft-4': '0px 0px 40px rgba(38, 38, 38, 0.1)',
       },
+      borderRadius: {
+        DEFAULT: '40px',
+      }
     },
   },
 };
-

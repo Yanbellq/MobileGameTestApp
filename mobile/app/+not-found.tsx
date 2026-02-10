@@ -1,26 +1,34 @@
-import { Link, Stack } from 'expo-router';
-
-import { Text, View } from 'react-native';
-
-import { Container } from '@/components/Container';
+import { Container } from '@/components/layout/Container';
+import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
+import { PAGES } from '@/config/pages.config';
+import { HEADINGS } from '@/config/text.config';
+import { useCommonStore } from '@/store/common.store';
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+import { useEffect } from 'react';
 
 export default function NotFoundScreen() {
+  const router = useRouter();
+
+  useEffect(() => {
+    useCommonStore.getState().setHeaderLabel(HEADINGS.PROBLEM);
+  }, []);
+
   return (
-    <View className={styles.container}>
-      <Stack.Screen options={{ title: 'Oops!' }} />
-      <Container>
-        <Text className={styles.title}>{"This screen doesn't exist."}</Text>
-        <Link href="/" className={styles.link}>
-          <Text className={styles.linkText}>Go to home screen!</Text>
-        </Link>
-      </Container>
-    </View>
+    <Container>
+      <Heading className="flex-1 text-center" size="2xl">
+        {"This screen doesn't exist."}
+      </Heading>
+
+      <Button
+        variant={'default'}
+        size={'none'}
+        className="gap-3"
+        onPress={() => router.push(PAGES.HOME)}>
+        <ButtonIcon as={ArrowLeft} color={'white'} />
+        <ButtonText size={'default'}>Go to home screen!</ButtonText>
+      </Button>
+    </Container>
   );
 }
-
-const styles = {
-  container: `flex flex-1 bg-white`,
-  title: `text-xl font-bold`,
-  link: `mt-4 pt-4`,
-  linkText: `text-base text-[#2e78b7]`,
-};

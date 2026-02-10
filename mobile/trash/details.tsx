@@ -2,11 +2,17 @@ import { View } from 'react-native';
 
 import { Stack, useLocalSearchParams } from 'expo-router';
 
-import { Container } from '@/components/Container';
+import { Container } from '@/components/layout/Container';
 import { ScreenContent } from '@/components/ScreenContent';
+import { useCommonStore } from '@/store/common.store';
+import { useEffect } from 'react';
 
 export default function Details() {
   const { name } = useLocalSearchParams();
+
+  useEffect(() => {
+    useCommonStore.getState().setHeaderHeading(`Details for ${name}`);
+  }, [name]);
 
   return (
     <View className={styles.container}>
