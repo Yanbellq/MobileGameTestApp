@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Focus Reaction",
+    "slug": "focus-reaction",
     "version": "1.0.0",
 
     "scheme": "mobile",
-    "platforms": ["ios", "android"],
+    "platforms": ["ios", "android", "web"],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -19,7 +19,8 @@
     },
 
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    // "icon": "./assets/icon.png",
+    "icon": "./assets/Logo.png",
 
     "userInterfaceStyle": "light",
 
