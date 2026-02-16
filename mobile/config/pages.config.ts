@@ -9,4 +9,9 @@ export const PAGES: Record<string, Href> = {
 	PRIVACY_POLICY: '/privacy-policy',
 	TERMS_OF_USE: '/terms',
 	RATE_US: '/rate-us',
+
+	REACTION: '/reaction',
+	RAPID: '/rapid',
+	DROP: '/drop',
+	SPOT: '/spot',
 } as const;

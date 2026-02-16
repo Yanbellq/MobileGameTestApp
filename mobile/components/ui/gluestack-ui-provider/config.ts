@@ -23,6 +23,7 @@ export const config = {
     '--gray': '235, 235, 245, 0.60',
     '--button': '154 155 162',
     '--yellow': '255 204 0',
+    '--red': '255 59 48',
     '--widget': '36 39 44',
     '--widget-accent': '0 80 122',
   }),

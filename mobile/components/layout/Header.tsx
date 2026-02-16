@@ -15,7 +15,11 @@ interface Props {
 
 export function Header({ className = '' }: Props) {
   const insets = useSafeAreaInsets();
-  const label = useCommonStore((state) => state.headerLabel);
+  const {
+    headerLabel: label,
+    headerRightAction,
+    headerRightIcon: HeaderRightIcon,
+  } = useCommonStore((state) => state);
 
   const pathname = usePathname();
 
@@ -27,11 +31,14 @@ export function Header({ className = '' }: Props) {
     <View className={'px-4'} style={{ paddingTop: insets.top }}>
       <View className={cn(className, 'flex h-16 flex-row items-center justify-between')}>
         {pathname === PAGES.HOME ? (
-          <Button variant={'icon'} effect='solid' onPress={NAVIGATION.PROFILE.action}>
+          <Button variant={'icon'} effect="solid" onPress={NAVIGATION.PROFILE.action}>
             <ButtonIcon as={NAVIGATION.PROFILE.icon} />
           </Button>
         ) : (
-          <Button variant={'icon'} effect='solid' onPress={() => NAVIGATION.BACK.action(previousUrl)}>
+          <Button
+            variant={'icon'}
+            effect="solid"
+            onPress={() => NAVIGATION.BACK.action(previousUrl)}>
             <ButtonIcon as={NAVIGATION.BACK.icon} />
           </Button>
         )}
@@ -39,15 +46,19 @@ export function Header({ className = '' }: Props) {
         <Heading size={'xl'} bold>
           {label}
         </Heading>
-      
-        {pathname === PAGES.HOME ? (
-          <Button variant={'icon'} effect='solid' onPress={NAVIGATION.SETTINGS.action}>
+
+        {headerRightAction && HeaderRightIcon ? (
+          <Button variant={'icon'} effect="solid" onPress={headerRightAction}>
+            <ButtonIcon as={HeaderRightIcon} />
+          </Button>
+        ) : pathname === PAGES.HOME ? (
+          <Button variant={'icon'} effect="solid" onPress={NAVIGATION.SETTINGS.action}>
             <ButtonIcon as={NAVIGATION.SETTINGS.icon} />
           </Button>
         ) : (
           // Fix to prevent layout shift when navigating history will work good
           // <View className="h-20 w-20" />
-          <Button variant={'icon'} effect='solid' onPress={NAVIGATION.HOME.action}>
+          <Button variant={'icon'} effect="solid" onPress={NAVIGATION.HOME.action}>
             <ButtonIcon className={'h-7 w-7 text-gray'} as={NAVIGATION.HOME.icon} />
           </Button>
         )}

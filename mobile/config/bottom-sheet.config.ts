@@ -1,0 +1,1 @@
+export const bottomSheetSnapPoints = ['25%', '50%', '75%', '93%'];

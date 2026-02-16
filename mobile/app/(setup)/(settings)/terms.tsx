@@ -5,7 +5,7 @@ import { useCommonStore } from '@/store/common.store';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 
-export default function Settings() {
+export default function Terms() {
   const setHeaderLabel = useCommonStore((state) => state.setHeaderLabel);
 
   useEffect(() => {

@@ -15,6 +15,11 @@ export const HEADINGS = {
 	WIDGETS: {
 		RAPID: 'Rapid Fire High Score:',
 		SPOT: 'Spot the Difference High Score:',
+		
+		BOTTOM_SHEET: {
+			RAPID: 'Rapid Fire Stats',
+			SPOT: 'Spot the Difference High Score',
+		}
 	},
 
 	GAME: {
@@ -33,6 +38,7 @@ export const BUTTONS = {
 	START: 'Start Game',
 	TAP_START: 'Tap to Start',
 	HARD_MODE: 'Try Hard Mode',
+	RESTART: 'Start Over',
 
 	SUBSCRIPTION: 'Manage Subscription'
 } as const;

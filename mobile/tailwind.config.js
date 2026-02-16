@@ -48,6 +48,7 @@ module.exports = {
         black: 'rgb(0 0 0 / <alpha-value>)',
         gray: 'rgba(var(--gray))',
         yellow: 'rgb(var(--yellow) / <alpha-value>)',
+        red: 'rgb(var(--red) / <alpha-value>)',
 
         // Chart colors
         chart: {

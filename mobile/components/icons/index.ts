@@ -17,6 +17,7 @@ export { default as ArrowLeft } from '@/assets/icons/common/arrow_back_primary.s
 export { default as ChevronDown } from '@/assets/icons/common/chevron_down_primary.svg'
 export { default as ChevronRight } from '@/assets/icons/common/chevron_right_primary.svg'
 export { default as Pause } from '@/assets/icons/common/pause_primary.svg'
+export { default as Play } from '@/assets/icons/common/play_primary.svg'
 export { default as Settings } from '@/assets/icons/common/settings_primary.svg'
 export { default as User } from '@/assets/icons/common/user_primary.svg'
 
@@ -30,3 +31,11 @@ export { default as Profile } from '@/assets/icons/common/settings/user_blue.svg
 
 export { default as IconButtonBorder } from '@/assets/icon_button_border.svg'
 export { default as IconButtonBackground } from '@/assets/icon_button_background.svg'
+
+// Game Icons
+export { default as CircleGray } from '@/assets/game/circle-gray.svg'
+export { default as CirclePink } from '@/assets/game/circle-pink.svg'
+export { default as CircleRed } from '@/assets/game/circle-red.svg'
+export { default as CircleWhite } from '@/assets/game/circle-white.svg'
+
+export { default as OvalOrange } from '@/assets/game/oval-orange.svg'

@@ -1,10 +1,10 @@
 import { Container } from '@/components/layout/Container';
-import { ProfileCard } from '@/components/pages/profile/ProfileCard';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { BUTTONS, HEADINGS } from '@/config/text.config';
+import { ProfileCard } from '@/features/profile/profile-card';
 import { useCommonStore } from '@/store/common.store';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 export default function Profile() {
