@@ -17,7 +17,6 @@ export function Chart({ data, width, config }: Props) {
         height={220}
         chartConfig={config}
         withVerticalLines={false}
-        fromNumber={100}
         fromZero
         bezier
         getDotProps={() => ({ r: '10' })}

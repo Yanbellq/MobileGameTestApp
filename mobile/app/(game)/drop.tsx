@@ -1,4 +1,4 @@
-import { Pause, Play } from '@/components/icons';
+import { Pause, Play, ArrowLeft } from '@/components/icons';
 import { CircleOutline, Oval, Square } from '@/components/icons/game';
 import { Container } from '@/components/layout/Container';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -7,10 +7,14 @@ import { Heading } from '@/components/ui/heading';
 import { chartConfig } from '@/config/chart.config';
 import { BUTTONS, HEADINGS } from '@/config/text.config';
 import { CIRCLE_SIZE, FallingCircle } from '@/features/drop/falling-circle'
+import { Api } from '@/services/api.client'
+import { IWeeklyStatsResponse } from '@/services/game.service'
 import { chartData } from '@/shared/data/chart.data';
 import { useCommonStore } from '@/store/common.store';
 import { cn } from '@/utils/cn.utils';
-import React, { useEffect, useState } from 'react';
+import { formatStatsToChartData } from '@/utils/format.utils'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 
@@ -28,9 +32,10 @@ const SPAWN_INTERVAL = 1500; // ms between spawns
 export type GameState = (typeof GAME_STATE)[keyof typeof GAME_STATE];
 
 export default function Drop() {
-  const { setHeaderLabel, setHeaderRight } = useCommonStore((state) => state);
+  const { setHeaderLabel, setHeaderRight, setHeaderLeft } = useCommonStore((state) => state);
   const [gameState, setGameState] = useState<GameState>(GAME_STATE.IDLE);
   const [score, setScore] = useState<number>(0);
+  const scoreRef = useRef(0);
   const [circles, setCircles] = useState<{ id: number; startX: number }[]>([]);
   const [containerHeight, setContainerHeight] = useState<number>(0);
 
@@ -39,19 +44,39 @@ export default function Drop() {
     scrollX.value = event.contentOffset.x;
   });
 
+  const queryClient = useQueryClient();
+
+  // 1. Отримуємо статистику для графіка
+  const { data: stats } = useQuery<IWeeklyStatsResponse>({
+    queryKey: ['drop-stats'],
+    queryFn: () => Api.game.getStats('drop', true),
+  });
+
+  // 2. Мутація для відправки результату
+  const { mutate, isPending } = useMutation({
+    mutationFn: (score: number) => Api.game.saveScore(score, 'drop'),
+    onSuccess: () => {
+      // Оновлюємо статку після успішного запису
+      queryClient.invalidateQueries({ queryKey: ['drop-stats'] });
+    },
+  });
+
   useEffect(() => {
     setHeaderLabel(HEADINGS.GAME.DROP);
   }, [setHeaderLabel]);
 
   useEffect(() => {
     if (gameState === GAME_STATE.GAME) {
+      setHeaderLeft(() => setGameState('idle'), ArrowLeft);
       setHeaderRight(handlePause, Pause);
     } else if (gameState === GAME_STATE.PAUSED) {
+      setHeaderLeft(() => setGameState('idle'), ArrowLeft);
       setHeaderRight(handleResume, Play);
     } else {
+      setHeaderLeft(null);
       setHeaderRight(null);
     }
-  }, [gameState, setHeaderRight]);
+  }, [gameState, setHeaderRight, setHeaderLeft]);
 
   useEffect(() => {
     let interval: any;
@@ -91,12 +116,18 @@ export default function Drop() {
 
   const onMiss = React.useCallback((id: number) => {
     setCircles((prev) => prev.filter((c) => c.id !== id));
-    setScore((s) => s + 1);
-  }, []);
+    const newScore = score + 1;
+    setScore(newScore);
+    scoreRef.current = newScore;
+  }, [score]);
 
   const onHit = React.useCallback(() => {
+    mutate(scoreRef.current);
     setGameState(GAME_STATE.RESULT);
-  }, []);
+  }, [mutate]);
+
+  // 3. Форматуємо дані для ChartKit
+  const formattedChartData = useMemo(() => formatStatsToChartData(stats, chartData), [stats]);
 
   const renderHeading = () => {
     switch (gameState) {
@@ -159,12 +190,11 @@ export default function Drop() {
           <View className="flex flex-col gap-1 pl-3">
             <Heading>Your streak progress:</Heading>
             <Heading accent bold size={'2xl'}>
-              {/* // fixme */}
-              10
+              {stats?.bestEverData ?? '--'}
             </Heading>
           </View>
 
-          <Chart data={chartData} width={SCREEN_WIDTH - 90} config={chartConfig} />
+          <Chart data={formattedChartData} width={SCREEN_WIDTH - 90} config={chartConfig} />
         </View>
       ) : gameState === GAME_STATE.IDLE ? (
         <></>

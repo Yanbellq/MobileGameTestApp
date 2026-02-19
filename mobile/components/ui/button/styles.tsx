@@ -46,6 +46,7 @@ export const buttonTextStyle = tva({
       sm: 'text-xs',
       lg: 'text-sm',
       title: 'text-2xl font-bold',
+      "title-xl": 'text-3xl font-bold',
       icon: 'text-sm',
     },
   },

@@ -1,17 +1,20 @@
-import { Pause, Play } from '@/components/icons';
-import { ArrowLeft } from '@/components/icons/game';
+import { Pause, Play, ArrowLeft } from '@/components/icons';
 import { Container } from '@/components/layout/Container';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Chart } from '@/components/ui/chart';
 import { Heading } from '@/components/ui/heading';
 import { chartConfig } from '@/config/chart.config';
-import { COLORS } from '@/config/colors.config';
 import { BUTTONS, HEADINGS } from '@/config/text.config';
+import { COLORS } from '@/constants/colors.constants';
 import { SpotItem } from '@/features/spot/spot-item';
+import { Api } from '@/services/api.client'
+import { IWeeklyStatsResponse } from '@/services/game.service'
 import { chartData } from '@/shared/data/chart.data';
 import { useCommonStore } from '@/store/common.store';
 import { cn } from '@/utils/cn.utils';
-import { useEffect, useRef, useState } from 'react';
+import { formatStatsToChartData } from '@/utils/format.utils'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 
 const GAME_STATE = {
@@ -35,7 +38,7 @@ const MATCH_COLORS = [
 ];
 
 export default function Spot() {
-  const setHeaderLabel = useCommonStore((state) => state.setHeaderLabel);
+  const { setHeaderLabel, setHeaderRight, setHeaderLeft } = useCommonStore((state) => state);
   const [gameState, setGameState] = useState<GameState>(GAME_STATE.IDLE);
   const [usedTime, setUsedTime] = useState<number>(0.0);
   const [arrows, setArrows] = useState<number[]>([]);
@@ -46,6 +49,23 @@ export default function Spot() {
   const startTimeRef = useRef<number | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const queryClient = useQueryClient();
+
+  // 1. Отримуємо статистику для графіка
+  const { data: stats } = useQuery<IWeeklyStatsResponse>({
+    queryKey: ['spot-stats'],
+    queryFn: () => Api.game.getStats('spot'),
+  });
+
+  // 2. Мутація для відправки результату
+  const { mutate, isPending } = useMutation({
+    mutationFn: (score: number) => Api.game.saveScore(score, 'spot'),
+    onSuccess: () => {
+      // Оновлюємо статку після успішного запису
+      queryClient.invalidateQueries({ queryKey: ['spot-stats'] });
+    },
+  });
+
   useEffect(() => {
     setHeaderLabel(HEADINGS.GAME.SPOT);
     return () => stopTimer();
@@ -53,16 +73,18 @@ export default function Spot() {
 
   useEffect(() => {
     if (gameState === GAME_STATE.GAME) {
-      useCommonStore.getState().setHeaderRight(handlePause, Pause);
+      setHeaderLeft(() => setGameState('idle'), ArrowLeft);
+      setHeaderRight(handlePause, Pause);
     } else if (gameState === GAME_STATE.PAUSED) {
-      useCommonStore.getState().setHeaderRight(handleResume, Play);
+      setHeaderLeft(() => setGameState('idle'), ArrowLeft);
+      setHeaderRight(handleResume, Play);
     } else {
-      useCommonStore.getState().setHeaderRight(null);
+      setHeaderLeft(null);
+      setHeaderRight(null);
     }
-  }, [gameState]);
+  }, [gameState, setHeaderRight, setHeaderLeft]);
 
-  const startGame = () => {
-    setGameState(GAME_STATE.GAME);
+  const clear = () => {
     setMatchedIndices([]);
     setSelectedIndex(null);
     setPairColors({});
@@ -106,8 +128,14 @@ export default function Spot() {
     setArrows(newArrows);
   };
 
+  const handlesStartGame = () => {
+    clear();
+    setGameState(GAME_STATE.GAME);
+  };
+
   const handleReset = () => {
-    startGame();
+    clear();
+    setGameState(GAME_STATE.IDLE);
   };
 
   const handlePause = () => {
@@ -157,6 +185,14 @@ export default function Spot() {
         // Check Win
         if (newMatched.length === arrows.length) {
           stopTimer();
+
+          // Розраховуємо ТОЧНИЙ фінальний час прямо зараз ✅
+          const finalTimeMs = Date.now() - (startTimeRef.current || 0);
+          const finalTimeSec = parseFloat((finalTimeMs / 1000).toFixed(1));
+
+          setUsedTime(finalTimeSec); // Оновлюємо UI до фінального значення
+          mutate(finalTimeSec); // Відправляємо в базу ТОЧНО ТЕ САМЕ число
+
           setGameState(GAME_STATE.RESULT);
         }
       } else {
@@ -165,6 +201,9 @@ export default function Spot() {
       }
     }
   };
+
+  // 3. Форматуємо дані для ChartKit
+  const formattedChartData = useMemo(() => formatStatsToChartData(stats, chartData), [stats]);
 
   const renderHeading = () => {
     switch (gameState) {
@@ -181,7 +220,7 @@ export default function Spot() {
     if (gameState === GAME_STATE.IDLE) {
       return (
         <>
-          <Button onPress={startGame} variant={'default'} size="none" className="py-7">
+          <Button onPress={handlesStartGame} variant={'default'} size="none" className="py-7">
             <ButtonText size={'title'} className="text-accent">
               {BUTTONS.START}
             </ButtonText>
@@ -223,12 +262,11 @@ export default function Spot() {
           <View className="flex flex-col gap-1 pl-3">
             <Heading>Your reaction progress:</Heading>
             <Heading accent bold size={'2xl'}>
-              {/* // fixme */}
-              10s
+              {stats?.bestEverData ?? '--'}
             </Heading>
           </View>
 
-          <Chart data={chartData} width={screenWidth - 90} config={chartConfig} />
+          <Chart data={formattedChartData} width={screenWidth - 90} config={chartConfig} />
         </View>
       ) : gameState === GAME_STATE.IDLE ? (
         <></>
@@ -260,7 +298,7 @@ export default function Spot() {
                     key={index}
                     style={{
                       width: '21.8%',
-                      height: '21.8%',
+                      height: '19%',
                       borderWidth: isSelected ? 2 : 0,
                       borderColor: isSelected ? COLORS.RED : 'transparent',
                       opacity: isMatched ? 0.8 : 1, // Optional visual cue
