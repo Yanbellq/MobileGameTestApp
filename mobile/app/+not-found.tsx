@@ -1,8 +1,8 @@
 import { Container } from '@/components/layout/Container';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
-import { PAGES } from '@/config/pages.config';
 import { HEADINGS } from '@/config/text.config';
+import { PAGES } from '@/constants/pages.constants';
 import { useCommonStore } from '@/store/common.store';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';

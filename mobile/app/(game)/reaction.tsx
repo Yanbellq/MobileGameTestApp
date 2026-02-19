@@ -4,13 +4,16 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Chart } from '@/components/ui/chart';
 import { Heading } from '@/components/ui/heading';
 import { chartConfig } from '@/config/chart.config';
-import { COLORS } from '@/config/colors.config';
 import { BUTTONS, HEADINGS } from '@/config/text.config';
+import { COLORS } from '@/constants/colors.constants';
+import { Api } from '@/services/api.client';
+import { IWeeklyStatsResponse } from '@/services/game.service'
 import { chartData } from '@/shared/data/chart.data';
 import { useCommonStore } from '@/store/common.store';
 import { cn } from '@/utils/cn.utils';
-import { formatMsToSeconds } from '@/utils/format.utils';
-import { useCallback, useEffect, useState } from 'react';
+import { formatMsToSeconds, formatStatsToChartData } from '@/utils/format.utils';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Pressable, View } from 'react-native';
 
 const GAME_STATE = {
@@ -30,6 +33,23 @@ export default function Reaction() {
   const [litCircleIndex, setLitCircleIndex] = useState(-1);
   const [startTime, setStartTime] = useState(0);
   const [reactionTime, setReactionTime] = useState<number | null>(null);
+
+  const queryClient = useQueryClient();
+  
+  // 1. Отримуємо статистику для графіка
+  const { data: stats } = useQuery<IWeeklyStatsResponse>({
+    queryKey: ['reaction-stats'],
+    queryFn: () => Api.game.getStats('reaction-test'),
+  });
+
+  // 2. Мутація для відправки результату
+  const { mutate, isPending } = useMutation({
+    mutationFn: (score: number) => Api.game.saveScore(score, 'reaction-test'),
+    onSuccess: () => {
+      // Оновлюємо статку після успішного запису
+      queryClient.invalidateQueries({ queryKey: ['reaction-stats'] });
+    },
+  });
 
   useEffect(() => {
     setHeaderLabel(HEADINGS.GAME.REACTION);
@@ -59,19 +79,26 @@ export default function Reaction() {
     setLitCircleIndex(0);
   };
 
-  const handleTap = useCallback(() => {
-    if (gameState === GAME_STATE.WAITING_FOR_TAP) {
-      const now = Date.now();
-      setReactionTime(now - startTime);
-      setGameState(GAME_STATE.RESULT);
-    }
-  }, [gameState, startTime]);
-
   const handleReset = () => {
     setGameState(GAME_STATE.IDLE);
     setLitCircleIndex(-1);
     setReactionTime(null);
   };
+
+  // 3. Форматуємо дані для ChartKit
+  const formattedChartData = useMemo(() => formatStatsToChartData(stats, chartData), [stats]);
+
+  const handleTap = useCallback(() => {
+    if (gameState === GAME_STATE.WAITING_FOR_TAP) {
+      const now = Date.now();
+      const diff = now - startTime;
+      const formattedScore = parseFloat((diff / 1000).toFixed(2));
+
+      setReactionTime(diff);
+      mutate(+diff.toFixed(2));
+      setGameState(GAME_STATE.RESULT);
+    }
+  }, [gameState, startTime, mutate]);
 
   const renderHeading = () => {
     switch (gameState) {
@@ -131,13 +158,13 @@ export default function Reaction() {
         {gameState === GAME_STATE.RESULT ? (
           <View className="flex flex-col gap-5">
             <View className="flex flex-col gap-1 pl-3">
-              <Heading>Your reaction progress:</Heading>
+              <Heading>Your best reaction progress:</Heading>
               <Heading accent bold size={'2xl'}>
-                2s
+                {stats?.bestEverData ? `${formatMsToSeconds(stats?.bestEverData)}s` : '--'}
               </Heading>
             </View>
 
-            <Chart data={chartData} width={screenWidth - 90} config={chartConfig} />
+            <Chart data={formattedChartData} width={screenWidth - 90} config={chartConfig} />
           </View>
         ) : (
           <View className="flex w-full flex-row items-center justify-between">

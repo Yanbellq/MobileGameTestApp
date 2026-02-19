@@ -1,28 +1,40 @@
+import { IUser } from '@/shared/types/user.interface'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface GameState {
-  score: number;
-  playerName: string;
-  increaseScore: (by: number) => void;
-  resetGame: () => void;
+  _hasHydrated: boolean; // Додай це поле ✅
+  setHasHydrated: (state: boolean) => void;
+  user: IUser | null;
+  setUser: (user: IUser | null) => void;
+  token: string | null;
+  refreshToken: string | null;
+  setToken: (token: string | null, refreshToken: string | null) => void;
 }
 
 export const useGameStore = create<GameState>()(
   persist(
     (set) => ({
-      score: 0,
-      playerName: 'Гравець 1',
-
-      increaseScore: (by) => set((state) => ({ score: state.score + by })),
-
-      resetGame: () => set({ score: 0 }),
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
+      user: null,
+      setUser: (user) => set({ user }),
+      token: null,
+      refreshToken: null,
+      setToken: (token, refreshToken) => set({ token, refreshToken }),
     }),
     {
       name: 'game-storage', // Ключ, за яким дані збережуться в AsyncStorage
       storage: createJSONStorage(() => AsyncStorage), // Вказуємо, що використовуємо пам'ять телефона
-      partialize: (state) => ({ score: state.score, playerName: state.playerName }), // Збережеться ТІЛЬКИ score та playerName, без функцій
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true); // Викликається, коли дані зчитано ✅
+      },
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        refreshToken: state.refreshToken, // Тепер зберігаємо все ✅
+      }), // Збережеться ТІЛЬКИ score та user, без функцій
     }
   )
 );

@@ -6,17 +6,18 @@ import { Button, ButtonIcon, ButtonText } from '../../components/ui/button';
 import { Heading } from '../../components/ui/heading';
 
 interface Props {
+  username: string
   className?: string;
 }
 
-export function ProfileCard({ className = '' }: Props) {
+export function ProfileCard({ username, className = '' }: Props) {
   return (
     <View className={cn('flex-1 flex flex-col items-center gap-10', className)}>
       <View className={'flex flex-col items-center justify-center gap-5'}>
         <Button onPress={() => {}} variant={'icon'} effect={'solid'} size={'icon-xl'}>
           <ButtonIcon as={Profile} size={'none'} />
         </Button>
-        <Heading>Change Avatar</Heading>
+        <Heading>{ username }</Heading>
       </View>
 
       <Button onPress={NAVIGATION.STATISTICS.action} variant={'link'} size="none"

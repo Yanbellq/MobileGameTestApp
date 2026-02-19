@@ -1,35 +1,36 @@
 import { ChevronDown, Lightning, Spot } from '@/components/icons';
 import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/layout/Section';
-import { WidgetBottomSheet } from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
 import { Chart } from '@/components/ui/chart';
 import { Heading } from '@/components/ui/heading/';
 import { Widget } from '@/components/ui/widget';
-import { bottomSheetSnapPoints } from '@/config/bottom-sheet.config';
 import { chartConfig } from '@/config/chart.config';
 import { GAME_NAVIGATION_GROUP, NAVIGATION } from '@/config/navigation.config';
 import { HEADINGS } from '@/config/text.config';
-import { RapidBottomSheet } from '@/features/widget/rapid-bottom-sheet'
-import { SpotBottomSheet } from '@/features/widget/spot-bottom-sheet'
+import { RapidBottomSheet } from '@/features/widget/rapid-bottom-sheet';
+import { SpotBottomSheet } from '@/features/widget/spot-bottom-sheet';
+import { Api } from '@/services/api.client'
 import { chartData } from '@/shared/data/chart.data';
 import { useCommonStore } from '@/store/common.store';
 import { cn } from '@/utils/cn.utils';
+import { formatStatsToChartData } from '@/utils/format.utils'
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, ScrollView, View } from 'react-native';
 
 const screenWidth = Dimensions.get('window').width;
 // - 90
 export default function Home() {
-  const setHeaderLabel = useCommonStore((state) => state.setHeaderLabel);
+  const { setHeaderLabel, setHeaderRight, setHeaderLeft } = useCommonStore((state) => state);
   const [openChart, setOpenChart] = useState(false);
 
   useEffect(() => {
     setHeaderLabel(HEADINGS.LOGO);
+    setHeaderLeft(null);
+    setHeaderRight(null);
   }, []);
-
-  const chartDataLastElement = chartData.datasets[0].data[chartData.datasets[0].data.length - 1];
 
   // 1. Створюємо Ref
   const rapidBottomSheetRef = useRef<BottomSheetModal>(null);
@@ -47,6 +48,25 @@ export default function Home() {
     spotBottomSheetRef.current?.present();
   }, []);
 
+  const { data: bestScores } = useQuery({
+    queryKey: ['all-best-scores'],
+    queryFn: () => Api.game.getAllBestScores(),
+  });
+
+  const rapid_light = bestScores?.gameStats.find((g) => g.game === 'rapid-fire-light')
+  const rapid_hard = bestScores?.gameStats.find((g) => g.game === 'rapid-fire-hard')
+  const spot = bestScores?.gameStats.find((g) => g.game === 'spot')
+
+  const formattedHomeChartData = useMemo(() => {
+    // Створюємо "фейковий" об'єкт статистики, щоб хелпер його зрозумів
+    const mockStats = {
+      bestWeekData: bestScores?.weeklyAverageStats || {},
+      bestEverData: bestScores?.averageReaction || 0,
+    };
+
+    return formatStatsToChartData(mockStats, chartData);
+  }, [bestScores]);
+
   return (
     <View className="flex-1">
       <Container>
@@ -57,7 +77,7 @@ export default function Home() {
                 <View>
                   <Heading size={'xl'}>Your reaction:</Heading>
                   <Heading size={'2xl'} accent bold>
-                    {chartDataLastElement}s
+                    {bestScores?.averageReaction ?? '--'}s
                   </Heading>
                 </View>
                 <Button variant="icon" effect="solid" onPress={() => setOpenChart(!openChart)}>
@@ -71,7 +91,11 @@ export default function Home() {
                 </Button>
               </View>
               <View className={cn('pr-2', openChart ? '' : 'hidden')}>
-                <Chart data={chartData} width={screenWidth - 90} config={chartConfig} />
+                <Chart
+                  data={formattedHomeChartData}
+                  width={screenWidth - 90}
+                  config={chartConfig}
+                />
               </View>
             </View>
             <View className={'flex w-full flex-row items-center justify-between'}>
@@ -83,7 +107,8 @@ export default function Home() {
                   </Heading>
                 </View>
                 <Heading accent bold size={'2xl'}>
-                  25
+                  {/* Знаходимо об'єкт гри і виводимо його bestScore */}
+                  {rapid_light?.bestScore || '--'}
                 </Heading>
               </Widget>
               <Widget size={'lg'} onPress={handleSpotOpenPress}>
@@ -94,7 +119,7 @@ export default function Home() {
                   </Heading>
                 </View>
                 <Heading accent bold size={'2xl'}>
-                  45
+                  {spot?.bestScore || '--'}
                 </Heading>
               </Widget>
             </View>
@@ -134,8 +159,8 @@ export default function Home() {
         </ScrollView>
         {/* <Heading>Welcome to the Home Screen</Heading> */}
       </Container>
-      <RapidBottomSheet ref={rapidBottomSheetRef} />
-      <SpotBottomSheet ref={spotBottomSheetRef} />
+      <RapidBottomSheet ref={rapidBottomSheetRef} light={rapid_light} hard={rapid_hard} />
+      <SpotBottomSheet ref={spotBottomSheetRef} data={spot} />
     </View>
   );
 }

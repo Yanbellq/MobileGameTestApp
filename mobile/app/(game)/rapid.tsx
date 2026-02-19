@@ -4,12 +4,16 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Chart } from '@/components/ui/chart';
 import { Heading } from '@/components/ui/heading';
 import { chartConfig } from '@/config/chart.config';
-import { COLORS } from '@/config/colors.config';
 import { BUTTONS, HEADINGS } from '@/config/text.config';
+import { COLORS } from '@/constants/colors.constants';
+import { Api } from '@/services/api.client'
+import { IWeeklyStatsResponse } from '@/services/game.service'
 import { chartData } from '@/shared/data/chart.data';
 import { useCommonStore } from '@/store/common.store';
 import { cn } from '@/utils/cn.utils';
-import { useEffect, useRef, useState } from 'react';
+import { formatStatsToChartData } from '@/utils/format.utils'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, View } from 'react-native';
 
 const GAME_STATE = {
@@ -34,18 +38,38 @@ const BUTTON_POS = [
 const screenWidth = Dimensions.get('window').width;
 
 type GameState = (typeof GAME_STATE)[keyof typeof GAME_STATE];
+type PlayMode = 'light' | 'hard';
 
 export default function Rapid() {
   const setHeaderLabel = useCommonStore((state) => state.setHeaderLabel);
   const setBgColor = useCommonStore((state) => state.setBgGradientColors);
   const [gameState, setGameState] = useState<GameState>(GAME_STATE.IDLE);
   const [totalTapped, setTotalTapped] = useState<number>(0);
+  const scoreRef = useRef(0);
   const [leftTime, setLeftTime] = useState<number>(60);
   const [activeCircleIndex, setActiveCircleIndex] = useState<number | null>(null);
+  const [playMode, setPlayMode] = useState<PlayMode>('light');
 
   const reactionTimerId = useRef<NodeJS.Timeout | null>(null);
   const gameTimerId = useRef<NodeJS.Timeout | null>(null);
   const reactionTime = useRef<number>(2000);
+
+  const queryClient = useQueryClient();
+
+  // 1. Отримуємо статистику для графіка
+  const { data: stats } = useQuery<IWeeklyStatsResponse>({
+    queryKey: ['rapid-stats', playMode],
+    queryFn: () => Api.game.getStats(`rapid-fire-${playMode}`, true),
+  });
+
+  // 2. Мутація для відправки результату
+  const { mutate, isPending } = useMutation({
+    mutationFn: (score: number) => Api.game.saveScore(score, `rapid-fire-${playMode}`),
+    onSuccess: () => {
+      // Оновлюємо статку після успішного запису
+      queryClient.invalidateQueries({ queryKey: ['rapid-stats', playMode] });
+    },
+  });
 
   useEffect(() => {
     setHeaderLabel(HEADINGS.GAME.RAPID);
@@ -68,6 +92,9 @@ export default function Rapid() {
   const handleGameOver = () => {
     if (gameTimerId.current) clearInterval(gameTimerId.current);
     if (reactionTimerId.current) clearTimeout(reactionTimerId.current);
+
+    mutate(scoreRef.current);
+
     setGameState(GAME_STATE.RESULT);
     setActiveCircleIndex(null);
   };
@@ -87,7 +114,8 @@ export default function Rapid() {
     }, reactionTime.current);
   };
 
-  const handleStartGame = (mode: 'light' | 'hard') => {
+  const handleStartGame = (mode: PlayMode) => {
+    setPlayMode(mode);
     setGameState(mode === 'light' ? GAME_STATE.LIGHT_MODE : GAME_STATE.HARD_MODE);
     setTotalTapped(0);
     setLeftTime(60);
@@ -107,7 +135,9 @@ export default function Rapid() {
 
   const handleCirclePress = (index: number) => {
     if (index === activeCircleIndex) {
-      setTotalTapped((prev) => prev + 1);
+      const newScore = totalTapped + 1;
+      setTotalTapped(newScore);
+      scoreRef.current = newScore; // Оновлюємо реф миттєво
       selectNextCircle();
     } else {
       handleGameOver();
@@ -117,11 +147,15 @@ export default function Rapid() {
   const handleReset = () => {
     setGameState(GAME_STATE.IDLE);
     setTotalTapped(0);
+    scoreRef.current = 0;
     setLeftTime(60);
     setActiveCircleIndex(null);
     if (gameTimerId.current) clearInterval(gameTimerId.current);
     if (reactionTimerId.current) clearTimeout(reactionTimerId.current);
   };
+
+  // 3. Форматуємо дані для ChartKit
+  const formattedChartData = useMemo(() => formatStatsToChartData(stats, chartData), [stats]);
 
   const renderHeading = () => {
     switch (gameState) {
@@ -192,14 +226,21 @@ export default function Rapid() {
       {gameState === GAME_STATE.RESULT ? (
         <View className="flex flex-col gap-5">
           <View className="flex flex-col gap-1 pl-3">
-            <Heading>Your streak progress:</Heading>
+            <Heading>
+              Your best streak in{' '}
+              <Heading
+                className={playMode === 'hard' ? 'text-red' : 'text-yellow'}
+              >
+                {playMode === 'hard' ? 'Hard' : 'Normal'}
+              </Heading>{' '}
+              mode:
+            </Heading>
             <Heading accent bold size={'2xl'}>
-              {/* // fixme */}
-              10
+              {stats?.bestEverData ?? '--'}
             </Heading>
           </View>
 
-          <Chart data={chartData} width={screenWidth - 90} config={chartConfig} />
+          <Chart data={formattedChartData} width={screenWidth - 90} config={chartConfig} />
         </View>
       ) : gameState === GAME_STATE.IDLE ? (
         <></>

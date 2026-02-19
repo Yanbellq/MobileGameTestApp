@@ -15,7 +15,7 @@ import {
 } from '@/components/icons';
 import { Href, router } from 'expo-router';
 import { Home } from 'lucide-react-native';
-import { PAGES } from './pages.config';
+import { PAGES } from '../constants/pages.constants';
 import { HEADINGS } from './text.config';
 
 export const NAVIGATION = {
@@ -27,6 +27,10 @@ export const NAVIGATION = {
     action: () => router.push(PAGES.HOME),
     icon: Home,
   },
+  AUTH: {
+    action: () => router.push(PAGES.AUTH),
+    icon: User,
+  },
   PROFILE: {
     action: () => router.push(PAGES.PROFILE),
     icon: User,
@@ -36,7 +40,7 @@ export const NAVIGATION = {
     icon: Settings,
   },
   STATISTICS: {
-    action: () => {},
+    action: () => router.push(PAGES.STATISTICS),
     label: HEADINGS.PROFILE.STATISTICS,
     icon: Statistic,
   },

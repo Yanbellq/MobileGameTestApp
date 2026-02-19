@@ -1,12 +1,17 @@
 import { WidgetBottomSheet } from '@/components/ui/bottom-sheet';
-import { Heading } from '@/components/ui/heading'
-import { bottomSheetSnapPoints } from '@/config/bottom-sheet.config';
+import { Heading } from '@/components/ui/heading';
 import { HEADINGS } from '@/config/text.config';
+import { bottomSheetSnapPoints } from '@/constants/bottom-sheet.constants';
+import { TScore } from '@/services/game.service'
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { forwardRef } from 'react';
-import { View } from 'react-native'
+import { View } from 'react-native';
 
-export const SpotBottomSheet = forwardRef<BottomSheetModal, any>((props, ref) => {
+interface Props { 
+  data?: TScore
+}
+
+export const SpotBottomSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
   return (
     <WidgetBottomSheet
       ref={ref}
@@ -18,11 +23,11 @@ export const SpotBottomSheet = forwardRef<BottomSheetModal, any>((props, ref) =>
         <View className="mt-4 w-full flex-col items-center gap-4" style={{ paddingTop: 16 }}>
           <Heading>High Score:</Heading>
           <Heading size="5xl" accent bold>
-            45
+            {props.data?.bestScore || '--'}
           </Heading>
-          <Heading>Last Game Average:</Heading>
+          <Heading>Last Game Score:</Heading>
           <Heading size="5xl" accent bold>
-            45
+            {props.data?.latestScore || '--'}
           </Heading>
         </View>
       </View>

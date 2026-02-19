@@ -1,44 +1,56 @@
 export const HEADINGS = {
-	LOGO: 'Focus Reaction',
-	PROFILE: {
-		HEADING: 'Profile',
-		STATISTICS: 'Statistics',
-	},
-	SETTINGS: {
-		HEADING: 'Settings',
-		CONTACT: 'Contact Us',
-		PRIVACY: 'Privacy Policy',
-		TERMS: 'Terms of Use',
-		RATE: 'Rate Us',
-	},
+  LOGO: 'Focus Reaction',
+  PROFILE: {
+    HEADING: 'Profile',
+    AUTH: {
+      HEADING: {
+        SIGN_IN: 'Sign In',
+        SIGN_UP: 'Sign Up',
+      },
+      FORGOT_PASSWORD: {
+        HEADING: 'Forgot Password',
+      },
+      CHANGE_PASSWORD: {
+        HEADING: 'Change Password',
+      },
+    },
+    STATISTICS: 'Statistics',
+  },
+  SETTINGS: {
+    HEADING: 'Settings',
+    CONTACT: 'Contact Us',
+    PRIVACY: 'Privacy Policy',
+    TERMS: 'Terms of Use',
+    RATE: 'Rate Us',
+  },
 
-	WIDGETS: {
-		RAPID: 'Rapid Fire High Score:',
-		SPOT: 'Spot the Difference High Score:',
-		
-		BOTTOM_SHEET: {
-			RAPID: 'Rapid Fire Stats',
-			SPOT: 'Spot the Difference High Score',
-		}
-	},
+  WIDGETS: {
+    RAPID: 'Rapid Fire High Score:',
+    SPOT: 'Spot the Difference High Score:',
 
-	GAME: {
-		RAPID: 'Rapid Fire',
-		SPOT: 'Spot the Difference',
-		DROP: 'Precision Drop',
-		REACTION: 'Reaction Test',
+    BOTTOM_SHEET: {
+      RAPID: 'Rapid Fire Stats',
+      SPOT: 'Spot the Difference High Score',
+    },
+  },
 
-		DAILY_TASK: 'Today’s Daily Challenge',
-	},
+  GAME: {
+    RAPID: 'Rapid Fire',
+    SPOT: 'Spot the Difference',
+    DROP: 'Precision Drop',
+    REACTION: 'Reaction Test',
 
-	PROBLEM: 'Oops!',
+    DAILY_TASK: 'Today’s Daily Challenge',
+  },
+
+  PROBLEM: 'Oops!',
 } as const;
 
 export const BUTTONS = {
-	START: 'Start Game',
-	TAP_START: 'Tap to Start',
-	HARD_MODE: 'Try Hard Mode',
-	RESTART: 'Start Over',
+  START: 'Start Game',
+  TAP_START: 'Tap to Start',
+  HARD_MODE: 'Try Hard Mode',
+  RESTART: 'Start Over',
 
-	SUBSCRIPTION: 'Manage Subscription'
+  CHANGE_PASSWORD: 'Change Password',
 } as const;

@@ -4,6 +4,10 @@ import { create } from 'zustand';
 export interface CommonState {
   headerLabel: string;
   setHeaderLabel: (label: string) => void;
+  
+  headerLeftAction: (() => void) | null;
+  headerLeftIcon: any | null;
+  setHeaderLeft: (action: (() => void) | null, icon?: any | null) => void;
 
   headerRightAction: (() => void) | null;
   headerRightIcon: any | null;
@@ -16,6 +20,10 @@ export interface CommonState {
 export const useCommonStore = create<CommonState>((set) => ({
   headerLabel: HEADINGS.LOGO,
   setHeaderLabel: (label) => set({ headerLabel: label }),
+
+  headerLeftAction: null,
+  headerLeftIcon: null,
+  setHeaderLeft: (action, icon) => set({ headerLeftAction: action, headerLeftIcon: icon }),
 
   headerRightAction: null,
   headerRightIcon: null,
